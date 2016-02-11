@@ -58,6 +58,7 @@ def main():
                 if consumed == int(args.n[0]):
                     raise KeyboardInterrupt
     except KeyboardInterrupt:
+        client.stop()
         client.disconnect()
         raise SystemExit(1)
     except stompest.error.StompProtocolError:
