@@ -16,6 +16,7 @@ def send_msg(args, client, msg):
         client.send(args.d[0], msg)
 
 def gen_msg(args):
+    randsample = 'abcdefghijklmno'
     yearl = ['2014', '2015', '2016']
     statusl = ['OK', 'WARNING', 'MISSING', 'CRITICAL', 'UKNOWN', 'DOWNTIME']
     monthl = ['%s' % '{:=02}'.format(i) for i in range(1,12)]
@@ -26,22 +27,30 @@ def gen_msg(args):
 
     prefix = args.p[0] if args.p else None
     if prefix:
-        msgd = 'detailsData: %s-%s\n' % (prefix, ''.join(random.sample('abcdefghijklmno', 10)))
+        msgd = 'detailsData: %s-%s\n' % (prefix, ''.join(random.sample(randsample, len(randsample))))
     else:
-        msgd = 'detailsData: %s\n' % ''.join(random.sample('abcdefghijklmno', 10))
+        msgd = 'detailsData: %s\n' % ''.join(random.sample(randsample, len(randsample)))
     if args.a:
         timestamp = 'timestamp: %sT%s:%s:%sZ\n' % (args.a[0], random.choice(hourl), random.choice(minutl), random.choice(secl))
     else:
         timestamp = 'timestamp: %s-%s-%sT%s:%s:%sZ\n' % (random.choice(yearl), random.choice(monthl), random.choice(daysl),
                                                         random.choice(hourl), random.choice(minutl), random.choice(secl),)
-    service = 'serviceType: %s\n' % ''.join(random.sample('abcdefghijklmno', 10))
-    hostname = 'hostName: %s\n' % ''.join(random.sample('abcdefghijklmno', 10))
-    metric = 'metricName: %s\n' % ''.join(random.sample('abcdefghijklmno', 10))
+    service = 'serviceType: %s\n' % ''.join(random.sample(randsample, len(randsample)))
+    hostname = 'hostName: %s\n' % ''.join(random.sample(randsample, len(randsample)))
+    metric = 'metricName: %s\n' % ''.join(random.sample(randsample, len(randsample)))
     status = 'metricStatus: %s\n' % random.choice(statusl)
-    nagiosh = 'nagios_host: %s\n' % ''.join(random.sample('abcdefghijklmno', 10))
-    summaryd = 'summaryData: %s\n' % ''.join(random.sample('abcdefghijklmno', 10))
+    nagiosh = 'nagios_host: %s\n' % ''.join(random.sample(randsample, len(randsample)))
+    summaryd = 'summaryData: %s\n' % ''.join(random.sample(randsample, len(randsample)))
 
-    msg = service + hostname + timestamp + metric + status + nagiosh + summaryd + msgd + 'EOT\n'
+    msg = ''
+    if args.w:
+        mandfields = [timestamp, service, hostname, metric, status]
+        mandfields.remove(random.choice(mandfields))
+        for i in mandfields:
+            msg += i
+        msg = msg + nagiosh + summaryd + msgd + 'EOT\n'
+    else:
+        msg = service + hostname + timestamp + metric + status + nagiosh + summaryd + msgd + 'EOT\n'
     return msg
 
 def main():
@@ -52,6 +61,7 @@ def main():
     parser.add_argument('-n', nargs=1, default=False, help='number of msgs', metavar='int')
     parser.add_argument('-p', nargs=1, default=False, help='msg prefix', metavar='msg prefix')
     parser.add_argument('-s', nargs=1, required=True, help='broker', metavar='broker')
+    parser.add_argument('-w', action='store_true', default=False, help='format message wrongly')
     parser.add_argument('-t', nargs=1, default=False, help='send msg every sec', metavar='float')
     parser.add_argument('-v', action='store_true', default=False, help='verbose')
     args = parser.parse_args()
