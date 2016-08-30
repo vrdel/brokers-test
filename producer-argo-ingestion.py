@@ -20,12 +20,7 @@ from os import path
 from base64 import b64encode
 
 
-def send_msg(sleep, ingapi, msg):
-    if sleep:
-        time.sleep(float(sleep))
-    else:
-        time.sleep(1)
-
+def send_msg(ingapi, msg):
     try:
         response = requests.post(ingapi,
                                  data=msg,
@@ -54,7 +49,7 @@ def construct_msg(args):
         hourl = ['%s' % '{:=02}'.format(i) for i in range(1,12)]
 
         i, details, = 0, ''
-        while i < (args.z * 0.74988)/len(randsample):
+        while i < args.z/len(randsample):
             details += ''.join(random.sample(randsample, len(randsample)))
             i += 1
         prefix = args.p if args.p else None
@@ -112,17 +107,24 @@ def construct_msg(args):
         finally:
             schema.close()
 
-    msg = b64enc(args, gen_msg(args))
-    size = sys.getsizeof(msg)
-    ingest_msg = {"messages": [{"attributes": {"type": "metric_data",
-                                               "partition_date": datetime.datetime.now().strftime('%Y-%m-%d')},
-                                "data": msg}]}
+    i, size, lmsg = 0, 0, []
+    while i < args.b:
+        msg = b64enc(args, gen_msg(args))
+        size += sys.getsizeof(msg)
+        lmsg.append(msg)
+        i += 1
 
-    return size, json.dumps(ingest_msg)
+    lmsg = map(lambda m: {"attributes": {"type": "metric_data",
+                                         "partition_date": datetime.datetime.now().strftime('%Y-%m-%d')},
+                          "data": m}, lmsg)
+    ingest_msg = {"messages": lmsg}
+
+    return size, i, json.dumps(ingest_msg)
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', default=False, type=str, required=False, help='fixed timestamp', metavar='fixed timestamp')
+    parser.add_argument('-b', default=1, type=int, required=False, help='bulk write')
     parser.add_argument('-c', type=str, required=True, help='avro schema')
     parser.add_argument('-k', type=str, required=True, help='token', metavar='int')
     parser.add_argument('-n', default=False, type=int, help='number of msgs', metavar='int')
@@ -140,25 +142,33 @@ def main():
         i = 0
         if args.n:
             while i < int(args.n):
-                size, msg = construct_msg(args)
+                if args.t:
+                    time.sleep(float(args.t))
+                else:
+                    time.sleep(1)
+                size, n, msg = construct_msg(args)
                 if args.v:
-                    print 'Message: %d' % i
-                    print 'Message payload: %d bytes' % size
-                    print 'Message payload (trimmed to 256 char):'
+                    print 'Request: %d' % i
+                    print 'Num msg: %d, Request payload size: %d bytes' % (n, size)
+                    print 'Request payload (trimmed to 256 char):'
                     print '%.256s' % format(msg)
-                ret = send_msg(args.t, ingapi, msg)
+                ret = send_msg(ingapi, msg)
                 if args.v:
                     print 'Server return: %s\n' % ret
                 i += 1
         else:
             while True:
-                size, msg = construct_msg(args)
+                if args.t:
+                    time.sleep(float(args.t))
+                else:
+                    time.sleep(1)
+                size, n, msg = construct_msg(args)
                 if args.v:
-                    print 'Message: %d' % i
-                    print 'Message payload: %d bytes' % size
-                    print 'Message payload (trimmed to 256 char):'
+                    print 'Request: %d' % i
+                    print 'Num msg: %d, Request payload size: %d bytes' % (n, size)
+                    print 'Request payload (trimmed to 256 char):'
                     print '%.256s' % format(msg)
-                ret = send_msg(args.t, ingapi, msg)
+                ret = send_msg(ingapi, msg)
                 if args.v:
                     print 'Server return: %s\n' % ret
                 i += 1
