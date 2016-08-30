@@ -1,8 +1,5 @@
 #!/usr/bin/python
 
-from stompest.config import StompConfig
-from stompest.sync import Stomp
-
 import argparse
 import avro.schema
 import datetime
