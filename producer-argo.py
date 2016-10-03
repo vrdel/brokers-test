@@ -25,11 +25,15 @@ def gen_msg(args):
     minutl = ['%s' % '{:=02}'.format(i) for i in range(1,60)]
     hourl = ['%s' % '{:=02}'.format(i) for i in range(1,12)]
 
+    i, details, = 0, ''
+    while i < args.z/len(randsample):
+        details += ''.join(random.sample(randsample, len(randsample)))
+        i += 1
     prefix = args.p[0] if args.p else None
     if prefix:
-        msgd = 'detailsData: %s-%s\n' % (prefix, ''.join(random.sample(randsample, len(randsample))))
+        msgd = 'detailsData: %s-%s\n' % (prefix, details)
     else:
-        msgd = 'detailsData: %s\n' % ''.join(random.sample(randsample, len(randsample)))
+        msgd = 'detailsData: %s\n' % details
     if args.a:
         timestamp = 'timestamp: %sT%s:%s:%sZ\n' % (args.a[0], random.choice(hourl), random.choice(minutl), random.choice(secl))
     else:
@@ -59,6 +63,8 @@ def main():
     parser.add_argument('-e', action='store_true', default=False, help='persistent msgs flag')
     parser.add_argument('-a', nargs=1, required=False, help='fixed timestamp', metavar='fixed timestamp')
     parser.add_argument('-n', nargs=1, default=False, help='number of msgs', metavar='int')
+    parser.add_argument('-o', default=6163, type=int, help='port', metavar='port')
+    parser.add_argument('-z', default=16, type=int, help='size of msg payload', metavar='msg prefix')
     parser.add_argument('-p', nargs=1, default=False, help='msg prefix', metavar='msg prefix')
     parser.add_argument('-s', nargs=1, required=True, help='broker', metavar='broker')
     parser.add_argument('-w', action='store_true', default=False, help='format message wrongly')
@@ -66,7 +72,7 @@ def main():
     parser.add_argument('-v', action='store_true', default=False, help='verbose')
     args = parser.parse_args()
 
-    broker = 'tcp://%s:6163' % (args.s[0])
+    broker = 'tcp://%s:%i' % (args.s[0], args.o)
     config = StompConfig(broker)
     client = Stomp(config)
     client.connect()
@@ -78,7 +84,7 @@ def main():
                 msg = gen_msg(args)
                 if args.v:
                     print str(i)
-                    print msg
+                    print '%.128s' % msg
                 send_msg(args, client, msg)
                 i += 1
         else:
@@ -86,7 +92,7 @@ def main():
                 msg = gen_msg(args)
                 if args.v:
                     print str(i)
-                    print msg
+                    print '%.128s' % msg
                 send_msg(args, client, msg)
                 i += 1
     except KeyboardInterrupt:
