@@ -39,7 +39,10 @@ def gen_msg(args):
     else:
         timestamp = 'timestamp: %s-%s-%sT%s:%s:%sZ\n' % (random.choice(yearl), random.choice(monthl), random.choice(daysl),
                                                         random.choice(hourl), random.choice(minutl), random.choice(secl),)
-    service = 'serviceType: %s\n' % ''.join(random.sample(randsample, len(randsample)))
+    if args.i:
+        service = 'serviceType: %s,%s\n' %  (''.join(random.sample(randsample, len(randsample))), ''.join(random.sample(randsample, len(randsample))))
+    else:
+        service = 'serviceType: %s\n' % ''.join(random.sample(randsample, len(randsample)))
     hostname = 'hostName: %s\n' % ''.join(random.sample(randsample, len(randsample)))
     metric = 'metricName: %s\n' % ''.join(random.sample(randsample, len(randsample)))
     status = 'metricStatus: %s\n' % random.choice(statusl)
@@ -67,6 +70,7 @@ def main():
     parser.add_argument('-z', default=16, type=int, help='size of msg payload', metavar='msg prefix')
     parser.add_argument('-p', nargs=1, default=False, help='msg prefix', metavar='msg prefix')
     parser.add_argument('-s', nargs=1, required=True, help='broker', metavar='broker')
+    parser.add_argument('-i', action='store_true', required=False, default=False, help='paired service type')
     parser.add_argument('-w', action='store_true', default=False, help='format message wrongly')
     parser.add_argument('-t', nargs=1, default=False, help='send msg every sec', metavar='float')
     parser.add_argument('-v', action='store_true', default=False, help='verbose')
