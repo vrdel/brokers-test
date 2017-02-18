@@ -143,14 +143,12 @@ def main():
     parser.add_argument('-k', type=str, required=True, help='token', metavar='int')
     parser.add_argument('-n', default=False, type=int, help='number of msgs', metavar='int')
     parser.add_argument('-p', type=str, default=False, help='msg prefix', metavar='msg prefix')
-    parser.add_argument('-s', required=True, type=str, help='ingestion hostname', metavar='ingestion')
+    parser.add_argument('-s', required=True, type=str, help='messaging hostname', metavar='messaging')
     parser.add_argument('-t', default=False, type=float, help='send msg every sec')
     parser.add_argument('-v', action='store_true', default=False, help='verbose')
     parser.add_argument('-w', action='store_true', default=False, help='format message wrongly')
     parser.add_argument('-z', default=512, type=int, help='size of msg payload', metavar='float')
     args = parser.parse_args()
-
-    ingapi = 'https://%s/v1/projects/EGI/topics/metric_data:publish?key=%s' % (args.s, args.k)
 
     try:
         i = 0
@@ -160,7 +158,6 @@ def main():
                     time.sleep(float(args.t))
                 else:
                     time.sleep(1)
-                import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
                 size, n, msg = construct_msg(args)
                 if args.v:
                     print 'Request: %d' % i
