@@ -20,7 +20,9 @@ def main():
     sub = ams.get_sub(args.u)
     if sub:
         ams.set_pullopt('maxMessages', args.n)
-        msg = ams.pull_sub(args.u)
-        print msg
+        for m in ams.pull_sub(args.u)['receivedMessages']:
+            data = AmsMessage(**m['message']).get_data()
+
+
 
 main()
