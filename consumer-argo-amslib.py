@@ -16,13 +16,10 @@ def main():
 
     ams = ArgoMessagingService(endpoint=args.s, token=args.k, project='EGI')
 
-    subhave = False
     sub = ams.get_sub(args.u)
     if sub:
         ams.set_pullopt('maxMessages', args.n)
-        for m in ams.pull_sub(args.u)['receivedMessages']:
-            data = AmsMessage(**m['message']).get_data()
-
-
-
+        for ack, msg in ams.pull_sub(args.u):
+            data = msg.get_data()
+            print data
 main()
