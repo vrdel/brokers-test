@@ -5,6 +5,7 @@ import argparse
 
 from argo_ams_library.ams import ArgoMessagingService
 from argo_ams_library.amsmsg import AmsMessage
+from argo_ams_library.amsexceptions import AmsHandleExceptions
 
 def main():
     parser = argparse.ArgumentParser()
@@ -17,9 +18,15 @@ def main():
     ams = ArgoMessagingService(endpoint=args.s, token=args.k, project='EGI')
 
     sub = ams.get_sub(args.u)
+    ids = list()
     if sub:
-        ams.set_pullopt('maxMessages', args.n)
-        for ack, msg in ams.pull_sub(args.u):
-            data = msg.get_data()
-            print data
+        try:
+            for ack, msg in ams.pull_sub(args.u, args.n):
+                data = msg.get_data()
+                print data
+                ids.append(ack)
+            if ids:
+                ams.ack_sub(args.u, ids)
+        except AmsHandleExceptions as e:
+            print e
 main()
